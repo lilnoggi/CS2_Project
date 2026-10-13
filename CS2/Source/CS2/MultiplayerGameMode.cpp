@@ -31,9 +31,12 @@ void AMultiplayerGameMode::InitialiseLevel()
 				// Ensure MascotClasses array has blueprints
 				if (MascotClasses.IsValidIndex(MascotIndex) && MascotClasses[MascotIndex] != nullptr)
 				{
+					FActorSpawnParameters SpawnParams;
+					SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+					
 					// Get from the ordered array
 					FTransform SpawnTransform = LobbySpawnLocations[i];
-					APawn* SpawnedMascot = GetWorld()->SpawnActor<APawn>(MascotClasses[MascotIndex], SpawnTransform);
+					APawn* SpawnedMascot = GetWorld()->SpawnActor<APawn>(MascotClasses[MascotIndex], SpawnTransform, SpawnParams);
 					
 					// Get the specific PlayerController and Possess the character
 					APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), i);
@@ -103,7 +106,10 @@ void AMultiplayerGameMode::RequestPlayerJoinLate(APlayerController* CallingContr
 			int32 MascotInt = static_cast<int32>(AssignedMascot);
 			if (MascotClasses.IsValidIndex(MascotInt) && MascotClasses[MascotInt] != nullptr)
 			{
-				APawn* SpawnedPawn = GetWorld()->SpawnActor<APawn>(MascotClasses[MascotInt], SpawnTransform);
+				FActorSpawnParameters SpawnParams;
+				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+				
+				APawn* SpawnedPawn = GetWorld()->SpawnActor<APawn>(MascotClasses[MascotInt], SpawnTransform, SpawnParams);
 				if (SpawnedPawn)
 				{
 					CallingController->Possess(SpawnedPawn);
