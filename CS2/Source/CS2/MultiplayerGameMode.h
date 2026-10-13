@@ -46,4 +46,8 @@ class CS2_API AMultiplayerGameMode : public AGameModeBase
 	UFUNCTION(BlueprintImplementableEvent, Category = "Lobby")
 	void OnPlayerJoinedLateUI(APlayerController* Controller, int32 PlayerIndex);
 	
+	// Picks a random map from the Game Instance pool and loads it
+	UFUNCTION(BlueprintCallable, Category = "Level Transition")
+	void LoadNextMiniGame();
+	
 };

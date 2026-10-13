@@ -10,4 +10,8 @@ void UMascotGameInstance::Init()
 	
 	// Create 4 empty player slots when the game begins
 	PlayerRoster.SetNum(4);
+	
+	// Ensure the mini-game map pool is reset every time the game launches
+	MiniGamePool.Empty();
+	MiniGamePool.Add(FName("MAP_SugarRush"));
 }

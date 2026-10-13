@@ -115,3 +115,27 @@ void AMultiplayerGameMode::RequestPlayerJoinLate(APlayerController* CallingContr
 	// Call the Blueprint Event so the specific map can update its UI
 	OnPlayerJoinedLateUI(CallingController, PlayerIndex);
 }
+
+void AMultiplayerGameMode::LoadNextMiniGame()
+{
+	UMascotGameInstance* GI = Cast<UMascotGameInstance>(GetGameInstance());
+	if (GI && GI->MiniGamePool.Num() > 0)
+	{
+		// Pick a random index from the pool
+		int32 RandomIndex = FMath::RandRange(0, GI->MiniGamePool.Num() - 1);
+		
+		// Save the selected map name
+		FName NextMap = GI->MiniGamePool[RandomIndex];
+		
+		// Remove it from the pool so it does not play twice
+		GI->MiniGamePool.RemoveAt(RandomIndex);
+		
+		// Load the level
+		UGameplayStatics::OpenLevel(GetWorld(), NextMap);
+	}
+	else
+	{
+		// If the pool is empty, all mini-games are done! TODO: Load the results screen
+		UGameplayStatics::OpenLevel(GetWorld(), FName("MAP_Lobby"));
+	}
+}

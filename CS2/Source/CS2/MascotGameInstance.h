@@ -46,6 +46,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Roster")
 	TArray<FPlayerData> PlayerRoster;
 	
+	// The pool of remaining mini-games to choose from
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Progression")
+	TArray<FName> MiniGamePool;
+	
 	// Override Init to size the array for 4 players automatically on startup
 	virtual void Init() override;
 	
