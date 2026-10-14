@@ -28,9 +28,8 @@ struct FPlayerData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerData")
 	EMascot SelectedMascot = EMascot::Panda; // Default to Panda
 	
-	// TODO: Add other variables such as "int32 MiniGameScore = 0"
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerData")
-	// int32 MiniGameScore = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerData")
+	int32 MiniGameScore = 0;
 };
 
 
