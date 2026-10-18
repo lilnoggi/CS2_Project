@@ -34,17 +34,37 @@ class CS2_API AMascotPlayerController : public APlayerController
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Selection")
 	TArray<TSubclassOf<AActor>> MascotClasses;
 	
+	// Tracks if the player has pressed start to join the Character Select screen
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Selection")
+	bool bHasJoinedLobby;
+	
 	// -----------------------------------------------------------------------
 	
+	// Function to handle all Join/Lock/LateJoin logic
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	void HandleJoinInput();
+	
 	// Called from Enhanced Input D-Pad (1 for Right, -1 for Left)
-	UFUNCTION(BlueprintCallable, Category = "Selection")
+	UFUNCTION(BlueprintCallable, Category = "Input|Selection")
 	void CycleMascot(int32 Direction);
 	
 	// Called from Select Enhanced Input Action
-	UFUNCTION(BlueprintCallable, Category = "Selection")
-	bool LockInSelection();
+	UFUNCTION(BlueprintCallable, Category = "Input|Selection")
+	bool SelectCharacter();
 	
 	// Called from Cancel Enhanced Input Action
-	UFUNCTION(BlueprintCallable, Category = "Selection")
+	UFUNCTION(BlueprintCallable, Category = "Input|Selection")
 	void CancelSelection();
+	
+	// Triggers when the player joins Character Select screen for the first time
+	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
+	void OnJoinedCharacterSelectUI();
+	
+	// Triggers when a player successfully selects their character
+	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
+	void OnCharacterSelectedUI();
+	
+	// Triggers the Start Game logic
+	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
+	void OnStartGame();
 };
