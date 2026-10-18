@@ -30,6 +30,9 @@ struct FPlayerData
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerData")
 	int32 MiniGameScore = 0;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayerData")
+	int32 TotalScore = 0;
 };
 
 
