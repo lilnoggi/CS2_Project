@@ -49,5 +49,4 @@ class CS2_API AMultiplayerGameMode : public AGameModeBase
 	// Picks a random map from the Game Instance pool and loads it
 	UFUNCTION(BlueprintCallable, Category = "Level Transition")
 	void LoadNextMiniGame();
-	
 };
