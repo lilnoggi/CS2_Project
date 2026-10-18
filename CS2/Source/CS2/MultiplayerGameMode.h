@@ -30,13 +30,21 @@ class CS2_API AMultiplayerGameMode : public AGameModeBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawning")
 	TArray<FTransform> LobbySpawnLocations;
 	
+	// Delay before loading the podium map after a win
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Rules")
+	float PodiumTransitionDelay = 3.5f;
+	
 	// ----------------------------------------------------------------
 	
-	void InitialiseLevel();
+	virtual void InitialiseLevel();
 	
 	// Late-joiners function
 	UFUNCTION(BlueprintCallable, Category = "Lobby")
 	void RequestPlayerJoinLate(APlayerController* CallingController, FTransform SpawnTransform);
+	
+	// Call from any mini game when a player wins
+	UFUNCTION(BlueprintCallable, Category = "Game Rules")
+	void EndMatch(int32 WinningPlayerIndex, int32 PointsAwarded);
 	
 	// Function for drawing specific UI for this map
 	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
@@ -46,4 +54,15 @@ class CS2_API AMultiplayerGameMode : public AGameModeBase
 	UFUNCTION(BlueprintImplementableEvent, Category = "Lobby")
 	void OnPlayerJoinedLateUI(APlayerController* Controller, int32 PlayerIndex);
 	
+	// Blueprint event triggered when a match ends 
+	UFUNCTION(BlueprintImplementableEvent, Category = "Game Rules")
+	void OnMatchEnded(int32 WinningPlayerIndex);
+	
+	// Picks a random map from the Game Instance pool and loads it
+	UFUNCTION(BlueprintCallable, Category = "Level Transition")
+	void LoadNextMiniGame();
+	
+private:
+	void TransitionToPodium();
+	FTimerHandle PodiumTransitionTimer;
 };
