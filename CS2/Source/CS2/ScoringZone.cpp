@@ -3,6 +3,8 @@
 
 #include "ScoringZone.h"
 #include "MascotGameInstance.h"
+#include "SugarRushGameMode.h"
+#include "SugarRushGameMode.h"
 
 // Sets default values
 AScoringZone::AScoringZone()
@@ -23,6 +25,13 @@ void AScoringZone::AwardPointsAndDestroyCandy(int32 PointsToAdd, AActor* CandyTo
 	{
 		// Add the score directly to the struct in memory
 		GI->PlayerRoster[ZoneOwnerIndex].MiniGameScore += PointsToAdd;
+		
+		// Ask the Game Mode to check if this specific point triggers a win
+		ASugarRushGameMode* SRGameMode = Cast<ASugarRushGameMode>(GetWorld()->GetAuthGameMode());
+		if (SRGameMode)
+		{
+			SRGameMode->CheckWinCondition(ZoneOwnerIndex);
+		}
 	}
 	
 	if (CandyToDestroy)
