@@ -4,13 +4,67 @@
 #include "MascotPlayerController.h"
 #include "CharacterSelectGameMode.h"
 #include "MascotGameInstance.h"
+#include "MultiplayerGameMode.h"
 #include "Kismet/GameplayStatics.h"
 
 AMascotPlayerController::AMascotPlayerController()
 {
 	HoveredIndex = 0;
 	bIsReady = false;
+	bHasJoinedLobby = false;
 	CurrentDisplayCharacter = nullptr;
+}
+
+void AMascotPlayerController::HandleJoinInput()
+{
+	AGameModeBase* CurrentGM = GetWorld()->GetAuthGameMode();
+	
+	// SCENARIO 1: Character Selection Map
+	if (ACharacterSelectGameMode* CSGameMode = Cast<ACharacterSelectGameMode>(CurrentGM))
+	{
+		if (!bHasJoinedLobby)
+		{
+			// First time pressing join
+			CSGameMode->RequestPlayerJoin(this);
+			bHasJoinedLobby = true;
+			OnJoinedCharacterSelectUI(); // Hide Press Start
+		}
+		else if (!bIsReady)
+		{
+			// Already joined, so pressing joins means select
+			if (SelectCharacter())
+			{
+				OnCharacterSelectedUI(); // Tell blueprint to turn text to "READY!"
+			}
+		}
+		else
+		{
+			// Already selected, pressing join again tries to start the level
+			OnStartGame();
+		}
+	}
+	// Scenario 2: In Lobby or Mini-Game
+	else if (AMultiplayerGameMode* MPGameMode = Cast<AMultiplayerGameMode>(CurrentGM))
+	{
+		UMascotGameInstance* GI = Cast<UMascotGameInstance>(GetGameInstance());
+		int32 PlayerID = UGameplayStatics::GetPlayerControllerID(this);
+		
+		if (GI && GI->PlayerRoster.IsValidIndex(PlayerID))
+		{
+			// Only trigger a late-joiner if they have not joined yet
+			if (!GI->PlayerRoster[PlayerID].bHasJoined)
+			{
+				// Get the exact spawn location for their specific player slot
+				FTransform SpawnTransform = FTransform::Identity;
+				if (MPGameMode->LobbySpawnLocations.IsValidIndex(PlayerID))
+				{
+					SpawnTransform = MPGameMode->LobbySpawnLocations[PlayerID];
+				}
+				
+				MPGameMode->RequestPlayerJoinLate(this, SpawnTransform);
+			}
+		}
+	}
 }
 
 void AMascotPlayerController::CycleMascot(int32 Direction)
@@ -35,7 +89,7 @@ void AMascotPlayerController::CycleMascot(int32 Direction)
 	}
 }
 
-bool AMascotPlayerController::LockInSelection()
+bool AMascotPlayerController::SelectCharacter()
 {
 	if (bIsReady)
 	{

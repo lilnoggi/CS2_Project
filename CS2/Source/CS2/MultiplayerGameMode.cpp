@@ -31,9 +31,12 @@ void AMultiplayerGameMode::InitialiseLevel()
 				// Ensure MascotClasses array has blueprints
 				if (MascotClasses.IsValidIndex(MascotIndex) && MascotClasses[MascotIndex] != nullptr)
 				{
+					FActorSpawnParameters SpawnParams;
+					SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+					
 					// Get from the ordered array
 					FTransform SpawnTransform = LobbySpawnLocations[i];
-					APawn* SpawnedMascot = GetWorld()->SpawnActor<APawn>(MascotClasses[MascotIndex], SpawnTransform);
+					APawn* SpawnedMascot = GetWorld()->SpawnActor<APawn>(MascotClasses[MascotIndex], SpawnTransform, SpawnParams);
 					
 					// Get the specific PlayerController and Possess the character
 					APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), i);
@@ -103,7 +106,10 @@ void AMultiplayerGameMode::RequestPlayerJoinLate(APlayerController* CallingContr
 			int32 MascotInt = static_cast<int32>(AssignedMascot);
 			if (MascotClasses.IsValidIndex(MascotInt) && MascotClasses[MascotInt] != nullptr)
 			{
-				APawn* SpawnedPawn = GetWorld()->SpawnActor<APawn>(MascotClasses[MascotInt], SpawnTransform);
+				FActorSpawnParameters SpawnParams;
+				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+				
+				APawn* SpawnedPawn = GetWorld()->SpawnActor<APawn>(MascotClasses[MascotInt], SpawnTransform, SpawnParams);
 				if (SpawnedPawn)
 				{
 					CallingController->Possess(SpawnedPawn);
@@ -114,4 +120,69 @@ void AMultiplayerGameMode::RequestPlayerJoinLate(APlayerController* CallingContr
 	
 	// Call the Blueprint Event so the specific map can update its UI
 	OnPlayerJoinedLateUI(CallingController, PlayerIndex);
+}
+
+void AMultiplayerGameMode::EndMatch(int32 WinningPlayerIndex, int32 PointsAwarded)
+{
+	// Stop movement for all player controllers
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (APlayerController* PC = It->Get())
+		{
+			PC->DisableInput(PC);
+		}
+	}
+	
+	// Accumulate victory points into persistent TotalScore
+	UMascotGameInstance* GI = Cast<UMascotGameInstance>(GetGameInstance());
+	if (GI && GI->PlayerRoster.IsValidIndex(WinningPlayerIndex))
+	{
+		GI->PlayerRoster[WinningPlayerIndex].TotalScore += PointsAwarded;
+	}
+	
+	// Trigger Blueprint Event for win
+	OnMatchEnded(WinningPlayerIndex);
+	
+	// Start transition delay to the podium
+	GetWorldTimerManager().SetTimer(PodiumTransitionTimer, this, &AMultiplayerGameMode::TransitionToPodium, PodiumTransitionDelay, false);
+}
+
+void AMultiplayerGameMode::LoadNextMiniGame()
+{
+	UMascotGameInstance* GI = Cast<UMascotGameInstance>(GetGameInstance());
+	if (GI && GI->MiniGamePool.Num() > 0)
+	{
+		// Pick a random index from the pool
+		int32 RandomIndex = FMath::RandRange(0, GI->MiniGamePool.Num() - 1);
+		
+		// Save the selected map name
+		FName NextMap = GI->MiniGamePool[RandomIndex];
+		
+		// Remove it from the pool so it does not play twice
+		GI->MiniGamePool.RemoveAt(RandomIndex);
+		
+		// Load the level
+		UGameplayStatics::OpenLevel(GetWorld(), NextMap);
+	}
+	else
+	{
+		// If the pool is empty, all mini-games are done! TODO: Load the results screen
+		UGameplayStatics::OpenLevel(GetWorld(), FName("MAP_Lobby"));
+	}
+}
+
+void AMultiplayerGameMode::TransitionToPodium()
+{
+	// Reset current MiniGameScores for the next round
+	UMascotGameInstance* GI = Cast<UMascotGameInstance>(GetGameInstance());
+	if (GI)
+	{
+		for (FPlayerData& Player : GI->PlayerRoster)
+		{
+			Player.MiniGameScore = 0;
+		}
+	}
+	
+	// Open the podium level
+	UGameplayStatics::OpenLevel(GetWorld(), FName("MAP_Podium"));
 }
