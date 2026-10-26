@@ -6,6 +6,19 @@
 #include "Engine/TargetPoint.h"
 #include "TimerManager.h"
 
+// Temporary struct to help sort scores at the end of a round
+struct FMiniGameRank
+{
+	int32 PlayerIndex;
+	int32 Score;
+	
+	// Sort from highest to lowest
+	bool operator<(const FMiniGameRank& Other) const
+	{
+		return Score > Other.Score;
+	}
+};
+
 void AMultiplayerGameMode::BeginPlay()
 {
 	Super::BeginPlay();
@@ -122,7 +135,7 @@ void AMultiplayerGameMode::RequestPlayerJoinLate(APlayerController* CallingContr
 	OnPlayerJoinedLateUI(CallingController, PlayerIndex);
 }
 
-void AMultiplayerGameMode::EndMatch(int32 WinningPlayerIndex, int32 PointsAwarded)
+void AMultiplayerGameMode::EndMatch(int32 WinningPlayerIndex)
 {
 	// Stop movement for all player controllers
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
@@ -135,9 +148,35 @@ void AMultiplayerGameMode::EndMatch(int32 WinningPlayerIndex, int32 PointsAwarde
 	
 	// Accumulate victory points into persistent TotalScore
 	UMascotGameInstance* GI = Cast<UMascotGameInstance>(GetGameInstance());
-	if (GI && GI->PlayerRoster.IsValidIndex(WinningPlayerIndex))
+	if (GI)
 	{
-		GI->PlayerRoster[WinningPlayerIndex].TotalScore += PointsAwarded;
+		// Gather all active players and their current MiniGameScore
+		TArray<FMiniGameRank> Ranks;
+		for (int32 i = 0; i < GI->PlayerRoster.Num(); ++i)
+		{
+			if (GI->PlayerRoster[i].bHasJoined)
+			{
+				FMiniGameRank NewRank;
+				NewRank.PlayerIndex = i;
+				NewRank.Score = GI->PlayerRoster[i].MiniGameScore;
+				Ranks.Add(NewRank);
+			}
+		}
+		
+		// Sort the array (1st place ranks[0]...)
+		Ranks.Sort();
+		
+		// Accumulate victory points into persistent TotalScore based on Rank
+		for (int32 RankIndex = 0; RankIndex < Ranks.Num(); RankIndex++)
+		{
+			int32 TruePlayerIndex = Ranks[RankIndex].PlayerIndex;
+			
+			// Ensure array does not go out of bounds if fewer placement points than players
+			if (PlacementPoints.IsValidIndex(RankIndex))
+			{
+				GI->PlayerRoster[TruePlayerIndex].TotalScore += PlacementPoints[RankIndex];
+			}
+		}
 	}
 	
 	// Trigger Blueprint Event for win

@@ -34,6 +34,10 @@ class CS2_API AMultiplayerGameMode : public AGameModeBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Rules")
 	float PodiumTransitionDelay = 3.5f;
 	
+	// Placement points array (1st, 2nd, 3rd, 4th)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Rules")
+	TArray<int32> PlacementPoints = { 5, 3, 2, 1};
+	
 	// ----------------------------------------------------------------
 	
 	virtual void InitialiseLevel();
@@ -42,9 +46,9 @@ class CS2_API AMultiplayerGameMode : public AGameModeBase
 	UFUNCTION(BlueprintCallable, Category = "Lobby")
 	void RequestPlayerJoinLate(APlayerController* CallingController, FTransform SpawnTransform);
 	
-	// Call from any mini game when a player wins
+	// Call from any mini-game when a player wins
 	UFUNCTION(BlueprintCallable, Category = "Game Rules")
-	void EndMatch(int32 WinningPlayerIndex, int32 PointsAwarded);
+	void EndMatch(int32 WinningPlayerIndex);
 	
 	// Function for drawing specific UI for this map
 	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
