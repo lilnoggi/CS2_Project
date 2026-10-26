@@ -15,9 +15,8 @@ void ASugarRushGameMode::CheckWinCondition(int32 PlayerIndex)
 		// Check if they hit the jar's capacity
 		if (GI->PlayerRoster[PlayerIndex].MiniGameScore >= 100)
 		{
-			// Award 5 victory points for winning this mini game
 			// Call the base class EndMatch function (MultiplayerGameMode)
-			EndMatch(PlayerIndex, 5);
+			EndMatch(PlayerIndex);
 		}
 	}
 }
